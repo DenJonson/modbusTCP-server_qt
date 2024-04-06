@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "modbustcpserver.h"
 
 #include <QApplication>
 

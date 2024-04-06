@@ -3,13 +3,13 @@
 
 #include <QMessageBox>
 
+#include <QLocalSocket>
 #include <QMainWindow>
+#include <QNetworkInterface>
 #include <QPushButton>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTimer>
-#include <QtNetwork/QLocalSocket>
-#include <QtNetwork/QNetworkInterface>
-#include <QtNetwork/QTcpServer>
-#include <QtNetwork/QTcpSocket>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -108,8 +108,14 @@ private:
 
   bool m_isHandwriting;
 
+  QList<QTcpSocket *> m_incommingSocketsList;
+
 private slots:
   void sendData();
   void on_cb_isHandwriting_stateChanged(int arg1);
+
+  void incommingConnection();
+  void slotReadyRead();
+  void slotDisconnected();
 };
 #endif // MODBUSTCPSERVER_H

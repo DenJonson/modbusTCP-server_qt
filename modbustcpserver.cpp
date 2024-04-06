@@ -3,7 +3,9 @@
 
 ModbusServer::ModbusServer(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false) {
+
   ui->setupUi(this);
+  m_incommingSocketsList = QList<QTcpSocket *>();
 
   memset(&m_dInputs, 0, sizeof(discretInputs_t));
   memset(&m_dOutputs, 0, sizeof(discretOutputs_t));
@@ -47,51 +49,14 @@ ModbusServer::ModbusServer(QWidget *parent)
 
 ModbusServer::~ModbusServer() { delete ui; }
 
-/////////////
-/// \brief Слот, обрабатывающий запрос от клиента
-///
-void ModbusServer::sendData() {
-  QTcpSocket *clientConnection = m_pServer->nextPendingConnection();
-  connect(clientConnection, &QAbstractSocket::disconnected, clientConnection,
-          &QObject::deleteLater);
-
-  QDataStream requestStream(clientConnection);
-  requestStream.startTransaction();
-
-  //  QByteArray request;
-  //  //  requestStream >> request;
-  //  request = clientConnection->readAll();
-
-  //  qDebug() << request;
-
-  int request = -1;
-  requestStream >> request;
-
-  ui->lineEdit->setText(QString::number(request));
-
-  m_requestStream.setDevice(nullptr);
-
-  QByteArray block;
-
-  m_sendingData.append(ui->leSendData->text());
-
-  QDataStream out(&block, QIODevice::WriteOnly);
-  //  out.setVersion(QDataStream::Qt_5_10);
-
-  out << m_sendingData.last();
-
-  clientConnection->write(block);
-  clientConnection->disconnectFromHost();
-  clientConnection = nullptr;
-}
-
 /////////
-/// \brief ModbusServer::initServer
+/// \brief Server initial settings
 ///
 void ModbusServer::initServer() {
   m_pServer = new QTcpServer(this);
 
-  connect(m_pServer, &QTcpServer::newConnection, this, &ModbusServer::sendData);
+  connect(m_pServer, &QTcpServer::newConnection, this,
+          &ModbusServer::incommingConnection);
 
   if (!m_pServer->listen(QHostAddress::Any, 502)) {
     QMessageBox::critical(
@@ -118,6 +83,77 @@ void ModbusServer::initServer() {
                              .arg(m_pServer->serverPort()));
 }
 
+////////////////////////
+/// \brief SLOT Create a new client socket, connect it with slots and put it in
+/// List
+/// \param description
+///
+void ModbusServer::incommingConnection() {
+  QTcpSocket *socket = m_pServer->nextPendingConnection();
+  connect(socket, &QTcpSocket::readyRead, this, &ModbusServer::slotReadyRead);
+  connect(socket, &QTcpSocket::disconnected, this,
+          &ModbusServer::slotDisconnected);
+
+  m_incommingSocketsList.append(socket);
+}
+
+////////////
+/// \brief SLOT Delete client socket and remove its link from List when it was
+/// disconnected
+///
+void ModbusServer::slotDisconnected() {
+  QTcpSocket *socket = (QTcpSocket *)sender();
+
+  m_incommingSocketsList.removeOne(socket);
+  socket->deleteLater();
+}
+
+//////////
+/// \brief ModbusServer::slotReadyRead
+///
+void ModbusServer::slotReadyRead() {
+  QTcpSocket *socket = (QTcpSocket *)sender();
+  QDataStream in(socket);
+  in.setVersion(QDataStream::Qt_5_12);
+
+  if (in.status() == QDataStream::Ok) {
+    qDebug() << "read incomming request...";
+    QString str;
+    in >> str;
+    qDebug() << str;
+    ui->leLastRequest->setText(str);
+    sendData();
+  }
+}
+
+/////////////
+/// \brief SLOT send response to client
+///
+void ModbusServer::sendData() {
+  // Take first client socket from List
+  QTcpSocket *clientConnection = m_incommingSocketsList.first();
+  QByteArray block;
+
+  // Put response data in container
+  m_sendingData.append(ui->leSendData->text());
+
+  // Create dataStream to send data into socket
+  QDataStream out(&block, QIODevice::WriteOnly);
+  out.setVersion(QDataStream::Qt_5_12);
+
+  // write data in byteArray through the dataStream
+  out << m_sendingData.last();
+
+  // write data in socket
+  clientConnection->write(block);
+  //  clientConnection->disconnectFromHost();
+}
+
+///////////
+/// \brief SLOT UI Disable automatic data changing in server UI and allow user
+/// change inputs data
+/// \param arg1
+///
 void ModbusServer::on_cb_isHandwriting_stateChanged(int arg1) {
   if (arg1) {
     m_isHandwriting = true;

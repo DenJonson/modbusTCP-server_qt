@@ -39,7 +39,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEdit">
+       <widget class="QLineEdit" name="leLastRequest">
         <property name="text">
          <string>установите соединение с сервером</string>
         </property>
@@ -346,7 +346,7 @@
      <x>0</x>
      <y>0</y>
      <width>450</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

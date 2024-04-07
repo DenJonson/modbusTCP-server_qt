@@ -16,24 +16,30 @@ ModbusServer::ModbusServer(QWidget *parent)
 
   initServer();
 
+  ui->textEdit->setReadOnly(true);
+
   for (int i = 0; i < MB_UI_DIN_NUM; i++) {
-    QCheckBox *cb = findChild<QCheckBox *>("cbDIn" + QString::number(i));
-    if (cb) {
-      cb->setEnabled(false);
+    QSpinBox *sb = findChild<QSpinBox *>("spinbDIn" + QString::number(i));
+    if (sb) {
+      sb->setReadOnly(true);
+      sb->setMinimum(0);
+      sb->setMaximum(1);
     }
   }
 
   for (int i = 0; i < MB_UI_DOUT_NUM; i++) {
-    QCheckBox *cb = findChild<QCheckBox *>("cbDOut" + QString::number(i));
-    if (cb) {
-      cb->setEnabled(false);
+    QSpinBox *sb = findChild<QSpinBox *>("sbDOut" + QString::number(i));
+    if (sb) {
+      sb->setReadOnly(true);
+      sb->setMinimum(0);
+      sb->setMaximum(1);
     }
   }
 
   for (int i = 0; i < MB_UI_2_BYTEIN_NUM; i++) {
     QSpinBox *sb = findChild<QSpinBox *>("sbDIn" + QString::number(i));
     if (sb) {
-      sb->setEnabled(false);
+      sb->setReadOnly(true);
       sb->setMinimum(0);
       sb->setMaximum(UINT16_MAX);
     }
@@ -42,7 +48,7 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_4_BYTEOUT_NUM; i++) {
     QLineEdit *le = findChild<QLineEdit *>("leQOut" + QString::number(i));
     if (le) {
-      le->setEnabled(false);
+      le->setReadOnly(true);
     }
   }
 }
@@ -90,6 +96,8 @@ void ModbusServer::initServer() {
 ///
 void ModbusServer::incommingConnection() {
   QTcpSocket *socket = m_pServer->nextPendingConnection();
+  ui->textEdit->append(QString("New connection with description: %1")
+                           .arg(socket->socketDescriptor()));
   connect(socket, &QTcpSocket::readyRead, this, &ModbusServer::slotReadyRead);
   connect(socket, &QTcpSocket::disconnected, this,
           &ModbusServer::slotDisconnected);
@@ -117,10 +125,11 @@ void ModbusServer::slotReadyRead() {
   in.setVersion(QDataStream::Qt_5_12);
 
   if (in.status() == QDataStream::Ok) {
-    qDebug() << "read incomming request...";
+    ui->textEdit->append(QString("Read incomming request from %1...")
+                             .arg(socket->socketDescriptor()));
     QString str;
     in >> str;
-    qDebug() << str;
+    ui->textEdit->append("Request: " + str);
     ui->leLastRequest->setText(str);
     sendData();
   }
@@ -155,37 +164,19 @@ void ModbusServer::sendData() {
 /// \param arg1
 ///
 void ModbusServer::on_cb_isHandwriting_stateChanged(int arg1) {
-  if (arg1) {
-    m_isHandwriting = true;
+  m_isHandwriting = bool(arg1);
 
-    for (int i = 0; i < MB_UI_DIN_NUM; i++) {
-      QCheckBox *cb = findChild<QCheckBox *>("cbDIn" + QString::number(i));
-      if (cb) {
-        cb->setEnabled(m_isHandwriting);
-      }
+  for (int i = 0; i < MB_UI_DIN_NUM; i++) {
+    QSpinBox *sb = findChild<QSpinBox *>("spinbDIn" + QString::number(i));
+    if (sb) {
+      sb->setReadOnly(!m_isHandwriting);
     }
+  }
 
-    for (int i = 0; i < MB_UI_2_BYTEIN_NUM; i++) {
-      QSpinBox *sb = findChild<QSpinBox *>("sbDIn" + QString::number(i));
-      if (sb) {
-        sb->setEnabled(m_isHandwriting);
-      }
-    }
-  } else {
-    m_isHandwriting = false;
-
-    for (int i = 0; i < MB_UI_DIN_NUM; i++) {
-      QCheckBox *cb = findChild<QCheckBox *>("cbDIn" + QString::number(i));
-      if (cb) {
-        cb->setEnabled(m_isHandwriting);
-      }
-    }
-
-    for (int i = 0; i < MB_UI_2_BYTEIN_NUM; i++) {
-      QSpinBox *sb = findChild<QSpinBox *>("sbDIn" + QString::number(i));
-      if (sb) {
-        sb->setEnabled(m_isHandwriting);
-      }
+  for (int i = 0; i < MB_UI_2_BYTEIN_NUM; i++) {
+    QSpinBox *sb = findChild<QSpinBox *>("sbDIn" + QString::number(i));
+    if (sb) {
+      sb->setReadOnly(!m_isHandwriting);
     }
   }
 }

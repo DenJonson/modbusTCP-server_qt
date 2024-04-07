@@ -2,7 +2,8 @@
 #include "ui_modbustcpserver.h"
 
 ModbusServer::ModbusServer(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false) {
+    : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false),
+      m_clientMessageSize(0) {
 
   ui->setupUi(this);
   m_incommingSocketsList = QList<QTcpSocket *>();
@@ -127,11 +128,37 @@ void ModbusServer::slotReadyRead() {
   if (in.status() == QDataStream::Ok) {
     ui->textEdit->append(QString("Read incomming request from %1...")
                              .arg(socket->socketDescriptor()));
-    QString str;
-    in >> str;
-    ui->textEdit->append("Request: " + str);
-    ui->leLastRequest->setText(str);
-    sendData();
+    //    QString str;
+    //    in >> str;
+    //    ui->textEdit->append("Request: " + str);
+    //    ui->leLastRequest->setText(str);
+
+    for (;;) {
+      if (m_clientMessageSize == 0) {
+        if (socket->bytesAvailable() < 2) {
+          break;
+        }
+        in >> m_clientMessageSize;
+        ui->textEdit->append(
+            QString("Size of incomming request: %1").arg(m_clientMessageSize));
+      }
+      if (socket->bytesAvailable() < m_clientMessageSize) {
+        ui->textEdit->append(QString("%1 bytes out of %2 are avaliable...")
+                                 .arg(QString::number(socket->bytesAvailable()),
+                                      QString::number(m_clientMessageSize)));
+        break;
+      }
+      ui->textEdit->append(QString("%1 bytes out of %2 are avaliable")
+                               .arg(QString::number(socket->bytesAvailable()),
+                                    QString::number(m_clientMessageSize)));
+      QString str;
+      in >> str;
+      ui->textEdit->append("Request: " + str);
+      ui->leLastRequest->setText(str);
+      m_clientMessageSize = 0;
+      sendData();
+      break;
+    }
   }
 }
 
@@ -142,16 +169,19 @@ void ModbusServer::sendData() {
   // Take first client socket from List
   QTcpSocket *clientConnection = m_incommingSocketsList.first();
   QByteArray block;
+  block.clear();
 
-  // Put response data in container
-  m_sendingData.append(ui->leSendData->text());
+  //  // Put response data in container
+  //  m_sendingData.append(ui->leSendData->text());
 
   // Create dataStream to send data into socket
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_5_12);
 
   // write data in byteArray through the dataStream
-  out << m_sendingData.last();
+  out << qint16(0) << ui->leSendData->text();
+  out.device()->seek(0);
+  out << quint16(block.size() - sizeof(qint16));
 
   // write data in socket
   clientConnection->write(block);

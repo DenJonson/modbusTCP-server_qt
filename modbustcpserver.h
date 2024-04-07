@@ -110,6 +110,8 @@ private:
 
   QList<QTcpSocket *> m_incommingSocketsList;
 
+  qint16 m_clientMessageSize;
+
 private slots:
   void sendData();
   void on_cb_isHandwriting_stateChanged(int arg1);

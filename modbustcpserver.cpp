@@ -128,10 +128,6 @@ void ModbusServer::slotReadyRead() {
   if (in.status() == QDataStream::Ok) {
     ui->textEdit->append(QString("Read incomming request from %1...")
                              .arg(socket->socketDescriptor()));
-    //    QString str;
-    //    in >> str;
-    //    ui->textEdit->append("Request: " + str);
-    //    ui->leLastRequest->setText(str);
 
     for (;;) {
       if (m_clientMessageSize == 0) {
@@ -151,10 +147,17 @@ void ModbusServer::slotReadyRead() {
       ui->textEdit->append(QString("%1 bytes out of %2 are avaliable")
                                .arg(QString::number(socket->bytesAvailable()),
                                     QString::number(m_clientMessageSize)));
-      QString str;
-      in >> str;
-      ui->textEdit->append("Request: " + str);
-      ui->leLastRequest->setText(str);
+
+      QByteArray request;
+      request.clear();
+      for (int i = 0; i < m_clientMessageSize; i++) {
+        char byte;
+        socket->read(&byte, sizeof(char));
+        request.append(uint8_t(byte));
+      }
+
+      ui->textEdit->append("Request: " + QString::number(request.toUInt()));
+      ui->leLastRequest->setText(QString::number(request.toUInt()));
       m_clientMessageSize = 0;
       sendData();
       break;

@@ -24,7 +24,7 @@
        <string>Данные сервера</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="2">
+       <item row="2" column="2">
         <widget class="QGroupBox" name="formGroupBox_2">
          <layout class="QFormLayout" name="formLayout_4">
           <item row="0" column="0">
@@ -58,7 +58,119 @@
          </layout>
         </widget>
        </item>
-       <item row="0" column="0">
+       <item row="1" column="1">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="2">
+        <widget class="QGroupBox" name="formGroupBox">
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>16-б вход 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>16-б вход 4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>16-б вход 2</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>16-б вход 3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="sbDIn0">
+            <property name="maximum">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="sbDIn1"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="sbDIn2"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="sbDIn3"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <layout class="QFormLayout" name="formLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Дискретный выход 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Дискретный выход 2</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Дискретный выход 3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Дискретный выход 4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="sbDOut0"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="sbDOut1"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="sbDOut2"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="sbDOut3"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
         <widget class="QGroupBox" name="formGroupBox">
          <layout class="QFormLayout" name="formLayout_2">
           <item row="0" column="0">
@@ -114,117 +226,19 @@
          </layout>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="QGroupBox" name="formGroupBox">
-         <layout class="QFormLayout" name="formLayout">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>16-б вход 1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_11">
-            <property name="text">
-             <string>16-б вход 4</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>16-б вход 2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>16-б вход 3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="sbDIn0">
-            <property name="maximum">
-             <number>0</number>
-            </property>
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="sbDIn1"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="sbDIn2"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QSpinBox" name="sbDIn3"/>
-          </item>
-         </layout>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>Адрес устройства:</string>
+         </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QGroupBox" name="groupBox">
-         <layout class="QFormLayout" name="formLayout_3">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Дискретный выход 1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Дискретный выход 2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Дискретный выход 3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_9">
-            <property name="text">
-             <string>Дискретный выход 4</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="sbDOut0"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="sbDOut1"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="sbDOut2"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QSpinBox" name="sbDOut3"/>
-          </item>
-         </layout>
+       <item row="0" column="1" colspan="2">
+        <widget class="QSpinBox" name="sbUnitId">
+         <property name="maximum">
+          <number>255</number>
+         </property>
         </widget>
-       </item>
-       <item row="0" column="1">
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>

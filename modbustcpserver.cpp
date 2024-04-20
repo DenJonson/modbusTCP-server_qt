@@ -2,8 +2,7 @@
 #include "ui_modbustcpserver.h"
 
 ModbusServer::ModbusServer(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false),
-      m_clientMessageSize(0) {
+    : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false) {
 
   ui->setupUi(this);
   m_incommingSocketsList = QList<QTcpSocket *>();
@@ -121,6 +120,11 @@ void ModbusServer::slotDisconnected() {
 /// \brief ModbusServer::slotReadyRead
 ///
 void ModbusServer::slotReadyRead() {
+  mbTcpInitTrans_t initData;
+  initData.transLen = 0;
+  initData.protocolId = 0;
+  initData.transId = 0;
+
   QTcpSocket *socket = (QTcpSocket *)sender();
   QDataStream in(socket);
   in.setVersion(QDataStream::Qt_5_12);
@@ -130,36 +134,39 @@ void ModbusServer::slotReadyRead() {
                              .arg(socket->socketDescriptor()));
 
     for (;;) {
-      if (m_clientMessageSize == 0) {
-        if (socket->bytesAvailable() < 2) {
+      if (initData.transLen == 0) {
+        if (socket->bytesAvailable() < 6) {
           break;
         }
-        in >> m_clientMessageSize;
+        in >> initData.transId;
         ui->textEdit->append(
-            QString("Size of incomming request: %1").arg(m_clientMessageSize));
+            QString("Incomming transaction with ID: %1").arg(initData.transId));
+        in >> initData.protocolId;
+        ui->textEdit->append(
+            QString("Protocol ID: %1").arg(initData.protocolId));
+        in >> initData.transLen;
+        ui->textEdit->append(
+            QString("Size of incomming request: %1").arg(initData.transLen));
       }
-      if (socket->bytesAvailable() < m_clientMessageSize) {
+      if (socket->bytesAvailable() < initData.transLen) {
         ui->textEdit->append(QString("%1 bytes out of %2 are avaliable...")
                                  .arg(QString::number(socket->bytesAvailable()),
-                                      QString::number(m_clientMessageSize)));
+                                      QString::number(initData.transLen)));
         break;
       }
       ui->textEdit->append(QString("%1 bytes out of %2 are avaliable")
                                .arg(QString::number(socket->bytesAvailable()),
-                                    QString::number(m_clientMessageSize)));
+                                    QString::number(initData.transLen)));
 
       QByteArray request;
       request.clear();
-      for (int i = 0; i < m_clientMessageSize; i++) {
+      for (int i = 0; i < initData.transLen; i++) {
         char byte;
         socket->read(&byte, sizeof(char));
         request.append(uint8_t(byte));
       }
 
-      ui->textEdit->append("Request: " + QString::number(request.toUInt()));
-      ui->leLastRequest->setText(QString::number(request.toUInt()));
-      m_clientMessageSize = 0;
-      sendData();
+      sendData(request);
       break;
     }
   }
@@ -168,7 +175,7 @@ void ModbusServer::slotReadyRead() {
 /////////////
 /// \brief SLOT send response to client
 ///
-void ModbusServer::sendData() {
+void ModbusServer::sendData(QByteArray request) {
   // Take first client socket from List
   QTcpSocket *clientConnection = m_incommingSocketsList.first();
   QByteArray block;

@@ -64,10 +64,13 @@ public:
   ~ModbusServer();
 
 private:
-  void initServer();
-
-private:
   Ui::ModbusServer *ui;
+
+  typedef struct {
+    uint16_t transId;
+    uint16_t protocolId;
+    uint16_t transLen;
+  } mbTcpInitTrans_t;
 
   typedef struct {
     bool dInput1;
@@ -110,10 +113,13 @@ private:
 
   QList<QTcpSocket *> m_incommingSocketsList;
 
-  qint16 m_clientMessageSize;
+  //  qint16 m_clientMessageSize;
+
+private:
+  void initServer();
+  void sendData(QByteArray data);
 
 private slots:
-  void sendData();
   void on_cb_isHandwriting_stateChanged(int arg1);
 
   void incommingConnection();

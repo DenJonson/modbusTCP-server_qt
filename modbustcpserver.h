@@ -17,22 +17,30 @@ class ModbusServer;
 }
 QT_END_NAMESPACE
 
+/// Коды функций
+#define MB_TCP_R_COIL 0x01 // Функция чтения дискретных выходов
+#define MB_TCP_R_DINPUT 0x02 // Функция чтения дискретных входов
+#define MB_TCP_R_HOLDING 0x03 // Функция чтения 32-битных выходов
+#define MB_TCP_R_INPUT 0x04 // Функция чтения 16-битных входов
+#define MB_TCP_W_SINGLE_COIL 0x05 // Функция записи одного дискретного выхода
+#define MB_TCP_W_SINGLE_HOLDING 0x06 // Функция записи одного 32-битного выхода
+#define MB_TCP_W_MULTIPLE_COIL 0x0F // Запись нескольких дискретных выходов
+#define MB_TCP_W_MULTIPLE_HOLDING 0x10 // Запись нескольких 32-битных выходов
+
+/// Коды ошибок
+#define MB_ILLEGAL_FUNCTION_ERR 0x1
+#define MB_ILLEGAL_DATA_ADDRESS_ERR 0x2
+#define MB_ILLEGAL_DATA_VALUE_ERR 0x3
+#define MB_FAILURE_ASSOC_ERR 0x4
+#define MB_ACKNOWLEDGE_ERR 0x5
+#define MB_BUSY_ERR 0x6
+#define MB_NACK_ERR 0x7
+
 /// Количество входов\выходов
 #define MB_UI_DIN_NUM 5
 #define MB_UI_DOUT_NUM 4
 #define MB_UI_2_BYTEIN_NUM 4
 #define MB_UI_4_BYTEOUT_NUM 2
-
-/// Номера функций
-#define MB_TCP_R_COIL 0x01 // Функция чтения дискретных выходов
-#define MB_TCP_R_DINPUT 0x02 // Функция чтения дискретных входов
-#define MB_TCP_R_HOLDING 0x03 // Функция чтения 32-битных выходов
-#define MB_TCP_R_INPUT 0x04 // Функция чтения 16-битных входов
-
-#define MB_TCP_W_SINGLE_COIL 0x05 // Функция записи одного дискретного выхода
-#define MB_TCP_W_SINGLE_HOLDING 0x06 // Функция записи одного 32-битного выхода
-#define MB_TCP_W_MULTIPLE_COIL 0x0F // Запись нескольких дискретных выходов
-#define MB_TCP_W_MULTIPLE_HOLDING 0x10 // Запись нескольких 32-битных выходов
 
 /// адреса доступа к данным
 #define MB_TCP_DINPUT_ADDR_1 10031
@@ -117,7 +125,8 @@ private:
 
 private:
   void initServer();
-  void sendData(QByteArray data);
+  void sendData(QList<uint8_t> data);
+  QList<uint8_t> prepareAnswer(QByteArray request);
 
 private slots:
   void on_cb_isHandwriting_stateChanged(int arg1);

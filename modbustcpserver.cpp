@@ -161,9 +161,20 @@ void ModbusServer::slotReadyRead() {
       QByteArray request;
       request.clear();
 
-      uint8_t initBuff[sizeof(mbTcpInitTrans_t)];
-      memcpy(&initBuff, &initData, sizeof(mbTcpInitTrans_t));
-
+      // Read CRC :_(
+      char initBuff[sizeof(mbTcpInitTrans_t)];
+      char tranIdBuff[2];
+      memcpy(&tranIdBuff, &initData.transId, 2);
+      char protocolIdBuff[2];
+      memcpy(&protocolIdBuff, &initData.protocolId, 2);
+      char tranLenBuff[2];
+      memcpy(&tranLenBuff, &initData.transLen, 2);
+      initBuff[0] = tranIdBuff[1];
+      initBuff[1] = tranIdBuff[0];
+      initBuff[2] = protocolIdBuff[1];
+      initBuff[3] = protocolIdBuff[0];
+      initBuff[4] = tranLenBuff[1];
+      initBuff[5] = tranLenBuff[0];
       for (uint64_t i = 0; i < sizeof(mbTcpInitTrans_t); i++) {
         request.append(initBuff[i]);
       }
@@ -184,7 +195,13 @@ void ModbusServer::slotReadyRead() {
 
       memcpy(&incommingCRC, &crcBuff, sizeof(qint16));
 
-      qDebug() << CRC;
+      if(CRC == incommingCRC)
+      {
+
+      } else
+      {
+          qDebug() << "CRC error!";
+      }
       sendData(request);
       break;
     }

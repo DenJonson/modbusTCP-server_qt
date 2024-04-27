@@ -160,12 +160,31 @@ void ModbusServer::slotReadyRead() {
 
       QByteArray request;
       request.clear();
+
+      uint8_t initBuff[sizeof(mbTcpInitTrans_t)];
+      memcpy(&initBuff, &initData, sizeof(mbTcpInitTrans_t));
+
+      for (uint64_t i = 0; i < sizeof(mbTcpInitTrans_t); i++) {
+        request.append(initBuff[i]);
+      }
+
       for (int i = 0; i < initData.transLen; i++) {
         char byte;
         socket->read(&byte, sizeof(char));
         request.append(uint8_t(byte));
       }
 
+      qint16 CRC = qChecksum(request, request.size() - 2);
+
+      qint16 incommingCRC = 0;
+      uint8_t crcBuff[sizeof(qint16)];
+
+      crcBuff[0] = request.at(request.size() - 2);
+      crcBuff[1] = request.at(request.size() - 1);
+
+      memcpy(&incommingCRC, &crcBuff, sizeof(qint16));
+
+      qDebug() << CRC;
       sendData(request);
       break;
     }

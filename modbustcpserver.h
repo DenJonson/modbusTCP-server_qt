@@ -69,46 +69,24 @@ public:
 private:
   Ui::ModbusServer *ui;
 
+  QList<int> m_discretInputAddrList = {10031, 10033, 10036, 10039, 10046};
+  QList<int> m_discretOutputAddrList = {20122, 20123, 20124, 20125};
+  QList<int> m_twoByteInputAddrList = {30569, 30570, 30579, 30580};
+  QList<int> m_fourByteOutputAddrList = {40058, 40059, 40110, 40111};
+
+  QList<bool> dInputList = {false, false, false, false, false};
+  QList<bool> dOutputList = {false, false, false, false};
+  QList<uint16_t> twoBInputList = {0, 0, 0, 0};
+  QList<uint32_t> fourBOutputList = {0, 0};
+
   typedef struct {
     uint16_t transId;
     uint16_t protocolId;
     uint16_t transLen;
   } mbTcpInitTrans_t;
 
-  typedef struct {
-    bool dInput1;
-    bool dInput2;
-    bool dInput3;
-    bool dInput4;
-    bool dInput5;
-  } discretInputs_t;
-
-  typedef struct {
-    bool dOutput1;
-    bool dOutput2;
-    bool dOutput3;
-    bool dOutput4;
-  } discretOutputs_t;
-
-  typedef struct {
-    uint16_t dDInput1;
-    uint16_t dDInput2;
-    uint16_t dDInput3;
-    uint16_t dDInput4;
-  } TwoBytesInputs_t;
-
-  typedef struct {
-    uint32_t dQOutput1;
-    uint32_t dQOutput2;
-  } FourBytesOutputs_t;
-
   QTcpServer *m_pServer;
   QStringList m_sendingData;
-
-  discretInputs_t m_dInputs;
-  discretOutputs_t m_dOutputs;
-  TwoBytesInputs_t m_doInputs;
-  FourBytesOutputs_t m_qOutputs;
 
   QDataStream m_requestStream;
 

@@ -15,11 +15,6 @@ ModbusServer::ModbusServer(QWidget *parent)
 
   m_transID = 0;
 
-  memset(&m_dInputs, 0, sizeof(discretInputs_t));
-  memset(&m_dOutputs, 0, sizeof(discretOutputs_t));
-  memset(&m_doInputs, 0, sizeof(TwoBytesInputs_t));
-  memset(&m_qOutputs, 0, sizeof(FourBytesOutputs_t));
-
   setWindowTitle("Сервер modbus-TCP");
 
   initServer();
@@ -224,36 +219,156 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
   if (unitId == uint(ui->sbUnitId->value())) {
     switch (func) {
+    // Read discrete outputs
     case MB_TCP_R_COIL: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_discretOutputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Read discrete inputs
     case MB_TCP_R_DINPUT: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_discretInputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Read 32b outputs
     case MB_TCP_R_HOLDING: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_fourByteOutputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Read 16b inputs
     case MB_TCP_R_INPUT: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_twoByteInputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Write discrete output
     case MB_TCP_W_SINGLE_COIL: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_discretOutputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Write 32b output
     case MB_TCP_W_SINGLE_HOLDING: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_fourByteOutputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Write discrete outputs
     case MB_TCP_W_MULTIPLE_COIL: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_discretOutputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
+    // Write 32b outputs
     case MB_TCP_W_MULTIPLE_HOLDING: {
+      uint16_t regAddress;
+      char buff[2];
+      buff[0] = request.at(8);
+      buff[1] = request.at(9);
+      memcpy(&regAddress, &buff, sizeof(uint16_t));
 
+      if (m_fourByteOutputAddrList.contains(regAddress)) {
+
+      } else {
+        qDebug() << "MB_NACK_ERR";
+        answer.append(unitId);
+        answer.append(func | 0x80);
+        answer.append(MB_NACK_ERR);
+        return answer;
+      }
       break;
     }
     default: {
@@ -311,7 +426,6 @@ void ModbusServer::sendData(QList<uint8_t> message) {
   }
 
   // write data in socket
-  qDebug() << block;
   clientConnection->write(block);
 }
 

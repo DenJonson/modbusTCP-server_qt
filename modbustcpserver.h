@@ -1,20 +1,15 @@
 #ifndef MODBUSTCPSERVER_H
 #define MODBUSTCPSERVER_H
 
-#include <QMessageBox>
-
-#include <QLocalSocket>
 #include <QMainWindow>
 #include <QNetworkInterface>
-#include <QPushButton>
 #include <QTcpServer>
-#include <QTcpSocket>
-#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class ModbusServer;
 }
+class QTcpSocket;
 QT_END_NAMESPACE
 
 /// Коды функций
@@ -119,9 +114,10 @@ private:
 
   bool m_isHandwriting;
 
-  QList<QTcpSocket *> m_incommingSocketsList;
+  uint16_t m_transID;
+  uint16_t const m_protocolID;
 
-  //  qint16 m_clientMessageSize;
+  QList<QTcpSocket *> m_incommingSocketsList;
 
 private:
   void initServer();

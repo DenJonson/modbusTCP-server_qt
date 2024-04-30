@@ -1,11 +1,19 @@
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTcpSocket>
+#include <QTimer>
+
 #include "modbustcpserver.h"
 #include "ui_modbustcpserver.h"
 
 ModbusServer::ModbusServer(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false) {
+    : QMainWindow(parent), ui(new Ui::ModbusServer), m_isHandwriting(false),
+      m_protocolID(0) {
 
   ui->setupUi(this);
   m_incommingSocketsList = QList<QTcpSocket *>();
+
+  m_transID = 0;
 
   memset(&m_dInputs, 0, sizeof(discretInputs_t));
   memset(&m_dOutputs, 0, sizeof(discretOutputs_t));
@@ -127,7 +135,7 @@ void ModbusServer::slotReadyRead() {
 
   QTcpSocket *socket = (QTcpSocket *)sender();
   QDataStream in(socket);
-  in.setVersion(QDataStream::Qt_5_12);
+  //  in.setVersion(QDataStream::Qt_5_12);
 
   if (in.status() == QDataStream::Ok) {
     ui->textEdit->append(QString("Read incomming request from %1...")
@@ -197,12 +205,10 @@ void ModbusServer::slotReadyRead() {
 
       QList<uint8_t> answer;
       answer.clear();
-      if(CRC == incommingCRC)
-      {
-          answer = prepareAnswer(request);
-      } else
-      {
-          qDebug() << "CRC error!";
+      if (CRC == incommingCRC) {
+        answer = prepareAnswer(request);
+      } else {
+        qDebug() << "CRC error!";
       }
       sendData(answer);
       break;
@@ -210,117 +216,103 @@ void ModbusServer::slotReadyRead() {
   }
 }
 
-QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request)
-{
-    QList<uint8_t> answer;
-    answer.clear();
-    uint unitId = request.at(6);
-    uint func = request.at(7);
+QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
+  QList<uint8_t> answer;
+  answer.clear();
+  uint unitId = request.at(6);
+  uint func = request.at(7);
 
-    if(unitId == uint(ui->sbUnitId->value()))
-    {
-        switch (func)
-        {
-        case MB_TCP_R_COIL:
-        {
+  if (unitId == uint(ui->sbUnitId->value())) {
+    switch (func) {
+    case MB_TCP_R_COIL: {
 
-            break;
-        }
-        case MB_TCP_R_DINPUT:
-        {
-
-            break;
-        }
-        case MB_TCP_R_HOLDING:
-        {
-
-            break;
-        }
-        case MB_TCP_R_INPUT:
-        {
-
-            break;
-        }
-        case MB_TCP_W_SINGLE_COIL:
-        {
-
-            break;
-        }
-        case MB_TCP_W_SINGLE_HOLDING:
-        {
-
-            break;
-        }
-        case MB_TCP_W_MULTIPLE_COIL:
-        {
-
-            break;
-        }
-        case MB_TCP_W_MULTIPLE_HOLDING:
-        {
-
-            break;
-        }
-        default:
-        {
-            qDebug() << "MB_ILLEGAL_DATA_VALUE_ERR";
-            answer.append(unitId);
-            answer.append(func | 0x8);
-            answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
-            return answer;
-        }
-        }
+      break;
     }
-    else
-    {
-        qDebug() << "MB_ILLEGAL_DATA_ADDRESS_ERR";
-        answer.append(unitId);
-        answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
-        return answer;
-    }
+    case MB_TCP_R_DINPUT: {
 
+      break;
+    }
+    case MB_TCP_R_HOLDING: {
+
+      break;
+    }
+    case MB_TCP_R_INPUT: {
+
+      break;
+    }
+    case MB_TCP_W_SINGLE_COIL: {
+
+      break;
+    }
+    case MB_TCP_W_SINGLE_HOLDING: {
+
+      break;
+    }
+    case MB_TCP_W_MULTIPLE_COIL: {
+
+      break;
+    }
+    case MB_TCP_W_MULTIPLE_HOLDING: {
+
+      break;
+    }
+    default: {
+      qDebug() << "MB_ILLEGAL_DATA_VALUE_ERR";
+      answer.append(unitId);
+      answer.append(func | 0x80);
+      answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+      return answer;
+    }
+    }
+  } else {
+    qDebug() << "MB_ILLEGAL_DATA_ADDRESS_ERR";
+    answer.append(unitId);
+    answer.append(func | 0x80);
+    answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
     return answer;
+  }
+
+  return answer;
 }
 
 /////////////
 /// \brief SLOT send response to client
 ///
 void ModbusServer::sendData(QList<uint8_t> message) {
+  // Increment trans ID
+  m_transID++;
+
   // Take first client socket from List
   QTcpSocket *clientConnection = m_incommingSocketsList.first();
   QByteArray block;
   block.clear();
 
-  //  // Put response data in container
-  //  m_sendingData.append(ui->leSendData->text());
-
   // Create dataStream to send data into socket
   QDataStream out(&block, QIODevice::WriteOnly);
-//  out.setVersion(QDataStream::Qt_5_12);
+  out.setVersion(QDataStream::Qt_5_12);
 
-  // write data in byteArray through the dataStream
-//  out << qint16(0) << message;
-//  out.device()->seek(0);
-//  out << quint16(block.size() - sizeof(qint16));
+  out << uint16_t(m_transID) << uint16_t(m_protocolID) << qint16(0);
 
-  foreach(uint8_t ch, message)
-  {
-      out << ch;
+  foreach (uint8_t ch, message) {
+    out << ch;
   }
 
+  // set commandSize
+  out.device()->seek(4);
+  out << quint16(block.size() + 2 - sizeof(qint16) * 3);
+
+  // calc CRC
   qint16 CRC = qChecksum(block, block.size());
   uint8_t buff[sizeof(qint16)];
   memcpy(&buff, &CRC, sizeof(qint16));
 
   for (uint64_t i = 0; i < sizeof(qint16); i++) {
-      block.append(buff[i]);
+    block.append(buff[i]);
   }
 
   // write data in socket
   qDebug() << block;
   clientConnection->write(block);
-  //  clientConnection->disconnectFromHost();
 }
 
 ///////////

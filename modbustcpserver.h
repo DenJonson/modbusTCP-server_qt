@@ -82,6 +82,7 @@ private:
   void initServer();
   void sendData(QList<uint8_t> data);
   QList<uint8_t> prepareAnswer(QByteArray request);
+  QString addNullsToHex(QString str, int size);
 
 private slots:
   void on_cb_isHandwriting_stateChanged(int arg1);

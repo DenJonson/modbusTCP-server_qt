@@ -51,6 +51,7 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_4_BYTEOUT_NUM; i++) {
     QLineEdit *le = findChild<QLineEdit *>("leQOut" + QString::number(i));
     if (le) {
+      le->setInputMask(UI_INPUT_MASK_32);
       le->setReadOnly(true);
     }
   }
@@ -223,8 +224,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_R_COIL: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretOutputAddrList.contains(regAddress)) {
@@ -242,8 +243,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_R_DINPUT: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretInputAddrList.contains(regAddress)) {
@@ -261,8 +262,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_R_HOLDING: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
@@ -280,8 +281,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_R_INPUT: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_twoByteInputAddrList.contains(regAddress)) {
@@ -347,31 +348,38 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_W_SINGLE_HOLDING: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
         answer.append(unitId);
         answer.append(func);
 
-        //        uint32_t reg;
-        //        QLineEdit *le = findChild<QLineEdit *>(
-        //            "leQOut" +
-        //            QString::number(m_fourByteOutputAddrList.indexOf(regAddress)));
-        //        if (le) {
-        //          reg = le->text().toInt(nullptr, 16);
-        //        } else {
-        //          qDebug() << "Cant find spinbox";
-        //        }
+        uint32_t reg;
+        char regBuff[sizeof(uint32_t)];
+        regBuff[0] = request.at(13);
+        regBuff[1] = request.at(12);
+        regBuff[2] = request.at(11);
+        regBuff[3] = request.at(10);
+        memcpy(&reg, &regBuff, sizeof(uint32_t));
 
-        //        char regBuff[sizeof(uint32_t)];
-        //        memcpy(&regBuff, &reg, sizeof(uint32_t));
+        QLineEdit *le = findChild<QLineEdit *>(
+            "leQOut" +
+            QString::number(m_fourByteOutputAddrList.indexOf(regAddress) / 2));
+        if (le) {
+          le->setText(
+              addNullsToHex(QString::number(reg, 16), sizeof(uint32_t)));
+        } else {
+          qDebug() << "Cant find line edit";
+        }
 
-        //        answer.append(regBuff[0]);
-        //        answer.append(regBuff[1]);
-        //        answer.append(regBuff[2]);
-        //        answer.append(regBuff[3]);
+        answer.append(buff[1]);
+        answer.append(buff[0]);
+        answer.append(regBuff[3]);
+        answer.append(regBuff[2]);
+        answer.append(regBuff[1]);
+        answer.append(regBuff[0]);
         return answer;
       } else {
         qDebug() << "MB_NACK_ERR";
@@ -387,8 +395,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_W_MULTIPLE_COIL: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretOutputAddrList.contains(regAddress)) {
@@ -406,8 +414,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     case MB_TCP_W_MULTIPLE_HOLDING: {
       uint16_t regAddress;
       char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
@@ -500,4 +508,24 @@ void ModbusServer::on_cb_isHandwriting_stateChanged(int arg1) {
       sb->setReadOnly(!m_isHandwriting);
     }
   }
+}
+
+QString ModbusServer::addNullsToHex(QString str, int size) {
+  QString complete;
+  if (str.size() < size * 2) {
+    int iter = size - str.size() / 2;
+    for (int i = 0; i < iter; i++) {
+      if (i == iter - 1) {
+        if (str.size() % 2 > 0) {
+          complete += "0" + str;
+        } else {
+          complete += str;
+        }
+      } else {
+        complete += "00";
+      }
+    }
+    return complete;
+  }
+  return str;
 }

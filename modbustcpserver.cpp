@@ -295,15 +295,43 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       }
       break;
     }
+
     // Write discrete output
     case MB_TCP_W_SINGLE_COIL: {
       uint16_t regAddress;
-      char buff[2];
-      buff[0] = request.at(8);
-      buff[1] = request.at(9);
+      char buff[sizeof(uint16_t)];
+      buff[0] = request.at(9);
+      buff[1] = request.at(8);
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretOutputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
+
+        uint16_t reg;
+        char regBuff[sizeof(uint16_t)];
+        regBuff[0] = request.at(11);
+        regBuff[1] = request.at(10);
+        memcpy(&reg, &regBuff, sizeof(uint16_t));
+
+        QSpinBox *sb = findChild<QSpinBox *>(
+            "sbDOut" +
+            QString::number(m_discretOutputAddrList.indexOf(regAddress)));
+        if (sb) {
+          if (reg == 0xFF00) {
+            sb->setValue(1);
+          } else {
+            sb->setValue(0);
+          }
+        } else {
+          qDebug() << "Cant find spinbox";
+        }
+
+        answer.append(buff[1]);
+        answer.append(buff[0]);
+        answer.append(regBuff[1]);
+        answer.append(regBuff[0]);
+        return answer;
 
       } else {
         qDebug() << "MB_NACK_ERR";
@@ -314,6 +342,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       }
       break;
     }
+
     // Write 32b output
     case MB_TCP_W_SINGLE_HOLDING: {
       uint16_t regAddress;
@@ -323,7 +352,27 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
 
+        //        uint32_t reg;
+        //        QLineEdit *le = findChild<QLineEdit *>(
+        //            "leQOut" +
+        //            QString::number(m_fourByteOutputAddrList.indexOf(regAddress)));
+        //        if (le) {
+        //          reg = le->text().toInt(nullptr, 16);
+        //        } else {
+        //          qDebug() << "Cant find spinbox";
+        //        }
+
+        //        char regBuff[sizeof(uint32_t)];
+        //        memcpy(&regBuff, &reg, sizeof(uint32_t));
+
+        //        answer.append(regBuff[0]);
+        //        answer.append(regBuff[1]);
+        //        answer.append(regBuff[2]);
+        //        answer.append(regBuff[3]);
+        return answer;
       } else {
         qDebug() << "MB_NACK_ERR";
         answer.append(unitId);
@@ -333,6 +382,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       }
       break;
     }
+
     // Write discrete outputs
     case MB_TCP_W_MULTIPLE_COIL: {
       uint16_t regAddress;

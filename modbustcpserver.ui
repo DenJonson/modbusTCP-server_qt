@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>461</width>
-    <height>753</height>
+    <width>597</width>
+    <height>843</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,40 +24,6 @@
        <string>Данные сервера</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="2" column="2">
-        <widget class="QGroupBox" name="formGroupBox_2">
-         <layout class="QFormLayout" name="formLayout_4">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>32-б выход 1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>32-б выход 2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="leQOut0">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="leQOut1">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="1" column="1">
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -73,36 +39,42 @@
        </item>
        <item row="1" column="2">
         <widget class="QGroupBox" name="formGroupBox">
-         <layout class="QFormLayout" name="formLayout">
-          <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="1" column="0">
            <widget class="QLabel" name="label_10">
             <property name="text">
              <string>16-б вход 1</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_11">
-            <property name="text">
-             <string>16-б вход 4</string>
-            </property>
-           </widget>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="sbDIn3"/>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="sbDIn1"/>
+          </item>
+          <item row="2" column="0">
            <widget class="QLabel" name="label_12">
             <property name="text">
              <string>16-б вход 2</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="label_13">
             <property name="text">
              <string>16-б вход 3</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>16-б вход 4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
            <widget class="QSpinBox" name="sbDIn0">
             <property name="maximum">
              <number>0</number>
@@ -112,116 +84,313 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="sbDIn1"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="sbDIn2"/>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Адрес 0х</string>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QSpinBox" name="sbDIn3"/>
+           <widget class="QSpinBox" name="sbDIn2"/>
+          </item>
+          <item row="5" column="1">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_6">
+            <property name="text">
+             <string>7769</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="lineEdit_7">
+            <property name="text">
+             <string>776A</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_8">
+            <property name="text">
+             <string>7773</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="lineEdit_9">
+            <property name="text">
+             <string>7774</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
        </item>
        <item row="2" column="0">
         <widget class="QGroupBox" name="groupBox">
-         <layout class="QFormLayout" name="formLayout_3">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Дискретный выход 1</string>
-            </property>
-           </widget>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="sbDOut0"/>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="label_7">
             <property name="text">
              <string>Дискретный выход 2</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="label_8">
             <property name="text">
              <string>Дискретный выход 3</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="sbDOut1"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>Адрес 0х</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="sbDOut3"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="sbDOut2"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Дискретный выход 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
            <widget class="QLabel" name="label_9">
             <property name="text">
              <string>Дискретный выход 4</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="sbDOut0"/>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_10">
+            <property name="text">
+             <string>4E9A</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="sbDOut1"/>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="lineEdit_11">
+            <property name="text">
+             <string>4E9B</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="sbDOut2"/>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_12">
+            <property name="text">
+             <string>4E9C</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QSpinBox" name="sbDOut3"/>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="lineEdit_13">
+            <property name="text">
+             <string>4E9D</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
        </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="formGroupBox">
-         <layout class="QFormLayout" name="formLayout_2">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Дискретный вход 1</string>
-            </property>
-           </widget>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="5" column="1">
+           <widget class="QSpinBox" name="spinbDIn4"/>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
              <string>Дискретный вход 2</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
+          <item row="5" column="2">
+           <widget class="QLineEdit" name="lineEdit_5">
             <property name="text">
-             <string>Дискретный вход 3</string>
+             <string>273E</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Дискретный вход 4</string>
-            </property>
-           </widget>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="spinbDIn0"/>
           </item>
-          <item row="4" column="0">
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="spinbDIn3"/>
+          </item>
+          <item row="5" column="0">
            <widget class="QLabel" name="label_3">
             <property name="text">
              <string>Дискретный вход 5</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="spinbDIn0"/>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit">
+            <property name="text">
+             <string>272F</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="spinbDIn1"/>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Дискретный вход 1</string>
+            </property>
+           </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="spinbDIn2"/>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Дискретный вход 4</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="lineEdit_2">
+            <property name="text">
+             <string>2731</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_3">
+            <property name="text">
+             <string>2734</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Дискретный вход 3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="lineEdit_4">
+            <property name="text">
+             <string>2737</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QSpinBox" name="spinbDIn3"/>
+           <widget class="QSpinBox" name="spinbDIn2"/>
           </item>
-          <item row="4" column="1">
-           <widget class="QSpinBox" name="spinbDIn4"/>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="spinbDIn1"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Адрес 0х</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -238,6 +407,99 @@
          <property name="maximum">
           <number>255</number>
          </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QGroupBox" name="formGroupBox_2">
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="lineEdit_16">
+            <property name="text">
+             <string>9CAE</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>Адрес 0х</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="leQOut1">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>32-б выход 2</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="leQOut0">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="lineEdit_14">
+            <property name="text">
+             <string>9C7A</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="lineEdit_15">
+            <property name="text">
+             <string>9C7B</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="text">
+             <string>32-б выход 1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="lineEdit_17">
+            <property name="text">
+             <string>9CAF</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -313,8 +575,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>461</width>
-     <height>21</height>
+     <width>597</width>
+     <height>25</height>
     </rect>
    </property>
   </widget>

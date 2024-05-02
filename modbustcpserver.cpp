@@ -33,7 +33,7 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_DOUT_NUM; i++) {
     QSpinBox *sb = findChild<QSpinBox *>("sbDOut" + QString::number(i));
     if (sb) {
-      sb->setReadOnly(true);
+      //      sb->setReadOnly(true);
       sb->setMinimum(0);
       sb->setMaximum(1);
     }
@@ -229,6 +229,31 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretOutputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
+
+        uint16_t reg;
+        char regBuff[sizeof(uint16_t)];
+        regBuff[0] = request.at(11);
+        regBuff[1] = request.at(10);
+        memcpy(&reg, &regBuff, sizeof(uint16_t));
+
+        if (reg > dOutputList.size())
+          reg = dOutputList.size();
+
+        uint8_t coils = 0;
+        for (int i = 0; i < reg; i++) {
+          QSpinBox *sb = findChild<QSpinBox *>(QString("sbDOut%1").arg(i));
+          if (sb) {
+            coils = coils << 1;
+            coils |= sb->value();
+          } else {
+            qDebug() << "Cant find sb!";
+          }
+        }
+
+        answer.append(uint8_t(sizeof(uint8_t)));
+        answer.append(coils);
 
       } else {
         qDebug() << "MB_NACK_ERR";

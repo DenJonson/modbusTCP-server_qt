@@ -475,7 +475,6 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         answer.append(buff[0]);
         answer.append(regBuff[1]);
         answer.append(regBuff[0]);
-        return answer;
 
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_COIL -> MB_NACK_ERR";
@@ -527,7 +526,6 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         answer.append(regBuff[2]);
         answer.append(regBuff[1]);
         answer.append(regBuff[0]);
-        return answer;
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
@@ -598,7 +596,6 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         answer.append(changedBuff[1]);
         answer.append(changedBuff[0]);
 
-        return answer;
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
@@ -621,7 +618,63 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
 
+        uint16_t changedItemsNum = 0;
+        uint16_t itemsToChange;
+        char changeSizeBuff[sizeof(uint16_t)];
+        changeSizeBuff[0] = request.at(11);
+        changeSizeBuff[1] = request.at(10);
+        memcpy(&itemsToChange, &changeSizeBuff, sizeof(uint16_t));
+
+        uint8_t commandSize = request.at(12);
+
+        QList<char> dataBuff;
+        for (int i = 0; i < commandSize; i++) {
+          dataBuff.append(request.at(13 + (commandSize - 1 - i)));
+        }
+
+        if (itemsToChange > m_fourByteOutputAddrList.size()) {
+          itemsToChange = m_fourByteOutputAddrList.size();
+          ui->textEdit->append(QString("It's only %1 items to change!")
+                                   .arg(m_fourByteOutputAddrList.size()));
+        }
+
+        int startIndex = m_fourByteOutputAddrList.indexOf(regAddress) / 2;
+        for (int i = 0; i < itemsToChange; i++) {
+          QLineEdit *le = findChild<QLineEdit *>(
+              "leQOut" + QString::number(startIndex + i));
+          if (le) {
+            bool ok;
+            uint32_t oldVal = le->text().toUInt(&ok, 16);
+            uint32_t newVal;
+            for (int j = 0; j < ((commandSize / 4) + 1); j++) {
+              if (dataBuff.size() < (4 + (4 * j))) {
+                char holdBuff[4];
+                holdBuff[0] = dataBuff.at(0 + (3 * j));
+                holdBuff[1] = dataBuff.at(1 + (3 * j));
+                holdBuff[2] = dataBuff.at(2 + (3 * j));
+                holdBuff[3] = dataBuff.at(3 + (3 * j));
+              } else {
+                TODO
+              }
+            }
+
+            if (oldVal != le->text().toUInt(&ok, 16))
+              changedItemsNum++;
+          } else {
+            qDebug() << "Cant find line edit!";
+          }
+        }
+
+        answer.append(buff[1]);
+        answer.append(buff[0]);
+
+        char changedBuff[2];
+        memcpy(&changedBuff, &changedItemsNum, sizeof(uint16_t));
+        answer.append(changedBuff[1]);
+        answer.append(changedBuff[0]);
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(

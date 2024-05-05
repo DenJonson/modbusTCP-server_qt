@@ -133,7 +133,7 @@ void ModbusServer::slotReadyRead() {
   //  in.setVersion(QDataStream::Qt_5_12);
 
   if (in.status() == QDataStream::Ok) {
-    ui->textEdit->append(QString("Read incomming request from %1...")
+    ui->textEdit->append(QString("\nRead incomming request from %1...")
                              .arg(socket->socketDescriptor()));
 
     for (;;) {
@@ -246,9 +246,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
           reg = dOutputList.size();
 
         uint8_t coils = 0;
-        for (int i = m_discretOutputAddrList.indexOf(regAddress); i < reg;
-             i++) {
-          QSpinBox *sb = findChild<QSpinBox *>(QString("sbDOut%1").arg(i));
+        for (int i = 0; i < reg; i++) {
+          QSpinBox *sb = findChild<QSpinBox *>(
+              QString("sbDOut%1")
+                  .arg(m_discretOutputAddrList.indexOf(regAddress) + i));
           if (sb) {
             coils |= sb->value()
                      << (i - m_discretOutputAddrList.indexOf(regAddress));
@@ -295,8 +296,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
           reg = dInputList.size();
 
         uint8_t inputs = 0;
-        for (int i = m_discretInputAddrList.indexOf(regAddress); i < reg; i++) {
-          QSpinBox *sb = findChild<QSpinBox *>(QString("spinbDIn%1").arg(i));
+        for (int i = 0; i < reg; i++) {
+          QSpinBox *sb = findChild<QSpinBox *>(
+              QString("spinbDIn%1")
+                  .arg(m_discretInputAddrList.indexOf(regAddress) + i));
           if (sb) {
             inputs |= sb->value()
                       << (i - m_discretInputAddrList.indexOf(regAddress));
@@ -344,8 +347,9 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         QList<uint8_t> holdings = QList<uint8_t>();
 
         int startIndex = (m_fourByteOutputAddrList.indexOf(regAddress) / 2);
-        for (int i = startIndex; i < reg; i++) {
-          QLineEdit *le = findChild<QLineEdit *>(QString("leQOut%1").arg(i));
+        for (int i = 0; i < reg; i++) {
+          QLineEdit *le =
+              findChild<QLineEdit *>(QString("leQOut%1").arg(startIndex + i));
           if (le) {
             bool ok;
             uint32_t holding = le->text().toUInt(&ok, 16);
@@ -403,8 +407,9 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         QList<uint8_t> inputs = QList<uint8_t>();
 
         int startIndex = m_twoByteInputAddrList.indexOf(regAddress);
-        for (int i = startIndex; i < reg; i++) {
-          QSpinBox *sb = findChild<QSpinBox *>(QString("sbDIn%1").arg(i));
+        for (int i = 0; i < reg; i++) {
+          QSpinBox *sb =
+              findChild<QSpinBox *>(QString("sbDIn%1").arg(startIndex + i));
           if (sb) {
             uint16_t holding = sb->value();
             char holdingBuff[sizeof(uint16_t)];
@@ -546,7 +551,54 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretOutputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
 
+        uint16_t changedItemsNum = 0;
+        uint16_t itemsToChange;
+        char changeSizeBuff[sizeof(uint16_t)];
+        changeSizeBuff[0] = request.at(11);
+        changeSizeBuff[1] = request.at(10);
+        memcpy(&itemsToChange, &changeSizeBuff, sizeof(uint16_t));
+
+        uint8_t commandSize = request.at(12);
+
+        int data = 0;
+        char dataBuff[commandSize];
+        for (int i = 0; i < commandSize; i++) {
+          dataBuff[i] = request.at(13 + (commandSize - 1 - i));
+        }
+        memcpy(&data, &dataBuff, commandSize);
+
+        if (itemsToChange > m_discretOutputAddrList.size()) {
+          itemsToChange = m_discretOutputAddrList.size();
+          ui->textEdit->append(QString("It's only %1 items to change!")
+                                   .arg(m_discretOutputAddrList.size()));
+        }
+
+        int startIndex = m_discretOutputAddrList.indexOf(regAddress);
+        for (int i = 0; i < itemsToChange; i++) {
+          QSpinBox *sb =
+              findChild<QSpinBox *>("sbDOut" + QString::number(startIndex + i));
+          if (sb) {
+            int oldVal = sb->value();
+            sb->setValue((data >> i) & 1);
+            if (oldVal != sb->value())
+              changedItemsNum++;
+          } else {
+            qDebug() << "Cant find spin box!";
+          }
+        }
+
+        answer.append(buff[1]);
+        answer.append(buff[0]);
+
+        char changedBuff[2];
+        memcpy(&changedBuff, &changedItemsNum, sizeof(uint16_t));
+        answer.append(changedBuff[1]);
+        answer.append(changedBuff[0]);
+
+        return answer;
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_COIL -> MB_NACK_ERR";
         ui->textEdit->append(

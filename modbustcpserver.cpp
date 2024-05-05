@@ -50,6 +50,7 @@ ModbusServer::ModbusServer(QWidget *parent)
     QLineEdit *le = findChild<QLineEdit *>("leQOut" + QString::number(i));
     if (le) {
       le->setInputMask(UI_INPUT_MASK_32);
+      le->setText("0");
       //      le->setReadOnly(true);
     }
   }
@@ -245,10 +246,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
           reg = dOutputList.size();
 
         uint8_t coils = 0;
-        for (int i = 0; i < reg; i++) {
+        for (int i = m_discretOutputAddrList.indexOf(regAddress); i < reg;
+             i++) {
           QSpinBox *sb = findChild<QSpinBox *>(QString("sbDOut%1").arg(i));
           if (sb) {
-            coils |= sb->value() << i;
+            coils |= sb->value()
+                     << (i - m_discretOutputAddrList.indexOf(regAddress));
           } else {
             qDebug() << "Cant find sb!";
           }
@@ -292,10 +295,11 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
           reg = dInputList.size();
 
         uint8_t inputs = 0;
-        for (int i = 0; i < reg; i++) {
+        for (int i = m_discretInputAddrList.indexOf(regAddress); i < reg; i++) {
           QSpinBox *sb = findChild<QSpinBox *>(QString("spinbDIn%1").arg(i));
           if (sb) {
-            inputs |= sb->value() << i;
+            inputs |= sb->value()
+                      << (i - m_discretInputAddrList.indexOf(regAddress));
           } else {
             qDebug() << "Cant find sb!";
           }
@@ -325,6 +329,42 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
+
+        uint16_t reg;
+        char regBuff[sizeof(uint16_t)];
+        regBuff[0] = request.at(11);
+        regBuff[1] = request.at(10);
+        memcpy(&reg, &regBuff, sizeof(uint16_t));
+
+        if (reg > fourBOutputList.size())
+          reg = fourBOutputList.size();
+
+        QList<uint8_t> holdings = QList<uint8_t>();
+
+        int startIndex = (m_fourByteOutputAddrList.indexOf(regAddress) / 2);
+        for (int i = startIndex; i < reg; i++) {
+          QLineEdit *le = findChild<QLineEdit *>(QString("leQOut%1").arg(i));
+          if (le) {
+            bool ok;
+            uint32_t holding = le->text().toUInt(&ok, 16);
+            char holdingBuff[sizeof(uint32_t)];
+            memcpy(&holdingBuff, &holding, sizeof(uint32_t));
+
+            holdings.append(holdingBuff[0]);
+            holdings.append(holdingBuff[1]);
+            holdings.append(holdingBuff[2]);
+            holdings.append(holdingBuff[3]);
+          } else {
+            qDebug() << "Cant find le!";
+          }
+        }
+
+        answer.append(uint8_t(holdings.size()));
+        for (int i = 0; i < holdings.size(); i++) {
+          answer.append(holdings.at(holdings.size() - i - 1));
+        }
 
       } else {
         //        qDebug() << "MB_TCP_R_HOLDING -> MB_NACK_ERR";

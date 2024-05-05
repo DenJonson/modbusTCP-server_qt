@@ -50,10 +50,10 @@ public:
 private:
   Ui::ModbusServer *ui;
 
-  QList<int> m_discretInputAddrList = {10031, 10033, 10036, 10039, 10046};
-  QList<int> m_discretOutputAddrList = {20122, 20123, 20124, 20125};
-  QList<int> m_twoByteInputAddrList = {30569, 30570, 30579, 30580};
-  QList<int> m_fourByteOutputAddrList = {40058, 40059, 40110, 40111};
+  const QList<int> m_discretInputAddrList = {10031, 10033, 10036, 10039, 10046};
+  const QList<int> m_discretOutputAddrList = {20122, 20123, 20124, 20125};
+  const QList<int> m_twoByteInputAddrList = {30569, 30570, 30579, 30580};
+  const QList<int> m_fourByteOutputAddrList = {40058, 40059, 40110, 40111};
 
   QList<bool> dInputList = {false, false, false, false, false};
   QList<bool> dOutputList = {false, false, false, false};

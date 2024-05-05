@@ -388,7 +388,39 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_twoByteInputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
 
+        uint16_t reg;
+        char regBuff[sizeof(uint16_t)];
+        regBuff[0] = request.at(11);
+        regBuff[1] = request.at(10);
+        memcpy(&reg, &regBuff, sizeof(uint16_t));
+
+        if (reg > twoBInputList.size())
+          reg = twoBInputList.size();
+
+        QList<uint8_t> inputs = QList<uint8_t>();
+
+        int startIndex = m_twoByteInputAddrList.indexOf(regAddress);
+        for (int i = startIndex; i < reg; i++) {
+          QSpinBox *sb = findChild<QSpinBox *>(QString("sbDIn%1").arg(i));
+          if (sb) {
+            uint16_t holding = sb->value();
+            char holdingBuff[sizeof(uint16_t)];
+            memcpy(&holdingBuff, &holding, sizeof(uint16_t));
+
+            inputs.append(holdingBuff[0]);
+            inputs.append(holdingBuff[1]);
+          } else {
+            qDebug() << "Cant find le!";
+          }
+        }
+
+        answer.append(uint8_t(inputs.size()));
+        for (int i = 0; i < inputs.size(); i++) {
+          answer.append(inputs.at(inputs.size() - i - 1));
+        }
       } else {
         //        qDebug() << "MB_TCP_R_INPUT -> MB_NACK_ERR";
         ui->textEdit->append(

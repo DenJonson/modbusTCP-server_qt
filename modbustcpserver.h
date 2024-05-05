@@ -85,8 +85,6 @@ private:
   QString addNullsToHex(QString str, int size);
 
 private slots:
-  void on_cb_isHandwriting_stateChanged(int arg1);
-
   void incommingConnection();
   void slotReadyRead();
   void slotDisconnected();

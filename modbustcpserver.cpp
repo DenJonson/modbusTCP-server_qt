@@ -24,7 +24,6 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_DIN_NUM; i++) {
     QSpinBox *sb = findChild<QSpinBox *>("spinbDIn" + QString::number(i));
     if (sb) {
-      //      sb->setReadOnly(true);
       sb->setMinimum(0);
       sb->setMaximum(1);
     }
@@ -33,7 +32,7 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_DOUT_NUM; i++) {
     QSpinBox *sb = findChild<QSpinBox *>("sbDOut" + QString::number(i));
     if (sb) {
-      sb->setReadOnly(true);
+      //      sb->setReadOnly(true);
       sb->setMinimum(0);
       sb->setMaximum(1);
     }
@@ -42,7 +41,6 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_2_BYTEIN_NUM; i++) {
     QSpinBox *sb = findChild<QSpinBox *>("sbDIn" + QString::number(i));
     if (sb) {
-      //      sb->setReadOnly(true);
       sb->setMinimum(0);
       sb->setMaximum(UINT16_MAX);
     }
@@ -52,7 +50,7 @@ ModbusServer::ModbusServer(QWidget *parent)
     QLineEdit *le = findChild<QLineEdit *>("leQOut" + QString::number(i));
     if (le) {
       le->setInputMask(UI_INPUT_MASK_32);
-      le->setReadOnly(true);
+      //      le->setReadOnly(true);
     }
   }
 }
@@ -250,8 +248,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         for (int i = 0; i < reg; i++) {
           QSpinBox *sb = findChild<QSpinBox *>(QString("sbDOut%1").arg(i));
           if (sb) {
-            coils = coils << 1;
-            coils |= sb->value();
+            coils |= sb->value() << i;
           } else {
             qDebug() << "Cant find sb!";
           }
@@ -262,9 +259,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
       } else {
         //        qDebug() << "MB_TCP_R_COIL -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -281,12 +279,36 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_discretInputAddrList.contains(regAddress)) {
+        answer.append(unitId);
+        answer.append(func);
 
+        uint16_t reg;
+        char regBuff[sizeof(uint16_t)];
+        regBuff[0] = request.at(11);
+        regBuff[1] = request.at(10);
+        memcpy(&reg, &regBuff, sizeof(uint16_t));
+
+        if (reg > dInputList.size())
+          reg = dInputList.size();
+
+        uint8_t inputs = 0;
+        for (int i = 0; i < reg; i++) {
+          QSpinBox *sb = findChild<QSpinBox *>(QString("spinbDIn%1").arg(i));
+          if (sb) {
+            inputs |= sb->value() << i;
+          } else {
+            qDebug() << "Cant find sb!";
+          }
+        }
+
+        answer.append(uint8_t(sizeof(uint8_t)));
+        answer.append(inputs);
       } else {
         //        qDebug() << "MB_TCP_R_DINPUT -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -306,9 +328,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
       } else {
         //        qDebug() << "MB_TCP_R_HOLDING -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -328,9 +351,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
       } else {
         //        qDebug() << "MB_TCP_R_INPUT -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -378,9 +402,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_COIL -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -428,9 +453,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         return answer;
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_HOLDING -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -451,9 +477,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_COIL -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);
@@ -473,9 +500,10 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_HOLDING -> MB_NACK_ERR";
-        ui->textEdit->append(QString("Request error: NAK - the requested "
-                                     "address (%1) does not exist!")
-                                 .arg(regAddress, 2, 16));
+        ui->textEdit->append(
+            QString("Request error: NAK - the requested "
+                    "address (%1) does not exist!")
+                .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
         answer.append(MB_NACK_ERR);

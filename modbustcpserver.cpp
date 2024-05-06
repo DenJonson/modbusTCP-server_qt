@@ -352,7 +352,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
               findChild<QLineEdit *>(QString("leQOut%1").arg(startIndex + i));
           if (le) {
             bool ok;
-            uint32_t holding = le->text().toUInt(&ok, 16);
+              uint32_t holding = le->text().split(" ").join("").toUInt(&ok, 16);
             char holdingBuff[sizeof(uint32_t)];
             memcpy(&holdingBuff, &holding, sizeof(uint32_t));
 
@@ -629,6 +629,17 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         memcpy(&itemsToChange, &changeSizeBuff, sizeof(uint16_t));
 
         uint8_t commandSize = request.at(12);
+
+        if(commandSize > (request.size() - 13))
+        {
+            ui->textEdit->append(
+                QString("Request error: NAK - too short command but expected %1 bytes")
+                    .arg(QString::number(commandSize)));
+            answer.append(unitId);
+            answer.append(func | 0x80);
+            answer.append(MB_NACK_ERR);
+            return answer;
+        }
 
         QList<char> dataBuff;
         for (int i = 0; i < commandSize; i++) {

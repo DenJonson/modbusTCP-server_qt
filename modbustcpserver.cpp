@@ -648,18 +648,31 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
           if (le) {
             bool ok;
             uint32_t oldVal = le->text().toUInt(&ok, 16);
-            uint32_t newVal;
-            for (int j = 0; j < ((commandSize / 4) + 1); j++) {
-              if (dataBuff.size() < (4 + (4 * j))) {
+            uint32_t newVal = 0;
+            if (dataBuff.size() >= (4 + (4 * i))) {
                 char holdBuff[4];
-                holdBuff[0] = dataBuff.at(0 + (3 * j));
-                holdBuff[1] = dataBuff.at(1 + (3 * j));
-                holdBuff[2] = dataBuff.at(2 + (3 * j));
-                holdBuff[3] = dataBuff.at(3 + (3 * j));
-              } else {
-                TODO
-              }
+                holdBuff[0] = dataBuff.at(0 + (4 * i));
+                holdBuff[1] = dataBuff.at(1 + (4 * i));
+                holdBuff[2] = dataBuff.at(2 + (4 * i));
+                holdBuff[3] = dataBuff.at(3 + (4 * i));
+
+                memcpy(&newVal, &holdBuff, sizeof(uint32_t));
+            } else {
+                int remainBytes = (4 + (4 * i)) - dataBuff.size();
+                if(remainBytes == 0)
+                {
+                    qDebug() << "Ну тут ты не прав";
+                    continue;
+                }
+                char holdBuff[remainBytes];
+                for(int k = 0; k < remainBytes; k++)
+                {
+                    holdBuff[k] = dataBuff.at(k + 4*i);
+                }
+                memcpy(&newVal, &holdBuff, sizeof(remainBytes));
             }
+
+            le->setText(QString::number(newVal, 16).toUpper());
 
             if (oldVal != le->text().toUInt(&ok, 16))
               changedItemsNum++;

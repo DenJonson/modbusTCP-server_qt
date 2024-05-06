@@ -15,7 +15,6 @@ ModbusServer::ModbusServer(QWidget *parent)
 
   m_transID = 0;
 
-
   setWindowTitle("Сервер modbus-TCP");
 
   initServer();
@@ -265,12 +264,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -314,12 +313,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_DINPUT -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -374,12 +373,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -430,12 +429,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_INPUT -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -480,12 +479,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -530,12 +529,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -600,12 +599,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -691,12 +690,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: NAK - the requested "
+            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_NACK_ERR);
+        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
         return answer;
       }
       break;
@@ -706,7 +705,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       ui->textEdit->append("Request error: ILLEGAL DATA VALUE!");
       answer.append(unitId);
       answer.append(func | 0x80);
-      answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+      answer.append(MB_ILLEGAL_FUNCTION_ERR);
       return answer;
     }
     }

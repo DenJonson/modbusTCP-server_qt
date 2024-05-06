@@ -15,6 +15,7 @@ ModbusServer::ModbusServer(QWidget *parent)
 
   m_transID = 0;
 
+
   setWindowTitle("Сервер modbus-TCP");
 
   initServer();
@@ -32,7 +33,7 @@ ModbusServer::ModbusServer(QWidget *parent)
   for (int i = 0; i < MB_UI_DOUT_NUM; i++) {
     QSpinBox *sb = findChild<QSpinBox *>("sbDOut" + QString::number(i));
     if (sb) {
-      //      sb->setReadOnly(true);
+      sb->setReadOnly(true);
       sb->setMinimum(0);
       sb->setMaximum(1);
     }
@@ -51,7 +52,7 @@ ModbusServer::ModbusServer(QWidget *parent)
     if (le) {
       le->setInputMask(UI_INPUT_MASK_32);
       le->setText("0");
-      //      le->setReadOnly(true);
+      le->setReadOnly(true);
     }
   }
 }

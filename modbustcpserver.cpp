@@ -661,7 +661,6 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
                 int remainBytes = (4 + (4 * i)) - dataBuff.size();
                 if(remainBytes == 0)
                 {
-                    qDebug() << "Ну тут ты не прав";
                     continue;
                 }
                 char holdBuff[remainBytes];

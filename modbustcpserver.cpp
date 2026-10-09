@@ -141,7 +141,11 @@ void ModbusServer::slotReadyRead() {
         if (socket->bytesAvailable() < 6) {
           break;
         }
-        in >> initData.transId;
+        uint8_t trans_id_bufff[2];
+        in >> trans_id_bufff[1];
+        in >> trans_id_bufff[0];
+        memcpy(&initData.transId, trans_id_bufff, 2);
+        m_transID = initData.transId;
         ui->textEdit->append(
             QString("Incomming transaction with ID: %1").arg(initData.transId));
         in >> initData.protocolId;
@@ -164,7 +168,6 @@ void ModbusServer::slotReadyRead() {
       QByteArray request;
       request.clear();
 
-      // Read CRC :_(
       char initBuff[sizeof(mbTcpInitTrans_t)];
       char tranIdBuff[2];
       memcpy(&tranIdBuff, &initData.transId, 2);
@@ -188,29 +191,12 @@ void ModbusServer::slotReadyRead() {
         request.append(uint8_t(byte));
       }
 
-      qint16 CRC = qChecksum(request, request.size() - 2);
-
-      qint16 incommingCRC = 0;
-      uint8_t crcBuff[sizeof(qint16)];
-
-      crcBuff[0] = request.at(request.size() - 2);
-      crcBuff[1] = request.at(request.size() - 1);
-
-      memcpy(&incommingCRC, &crcBuff, sizeof(qint16));
-
       QList<uint8_t> answer;
-      answer.clear();
-      if (CRC == incommingCRC) {
-        answer = prepareAnswer(request);
-      } else {
-        //        qDebug() << "CRC error!";
-        ui->textEdit->append(
-            QString("Reading error! The CRC read (%1) does not match the "
-                    "calculated CRC (%2)")
-                .arg(QString::number(incommingCRC, 16).toUpper(),
-                     QString::number(CRC, 16).toUpper()));
+      answer = prepareAnswer(request);
+      if (!m_isWrongSlaveAddress) {
+        sendData(answer);
       }
-      sendData(answer);
+      m_isWrongSlaveAddress = false;
       break;
     }
   }
@@ -264,12 +250,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -313,12 +299,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_DINPUT -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -335,50 +321,70 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         answer.append(unitId);
         answer.append(func);
 
-        uint16_t reg;
+        uint16_t read_byte_count;
         char regBuff[sizeof(uint16_t)];
         regBuff[0] = request.at(11);
         regBuff[1] = request.at(10);
-        memcpy(&reg, &regBuff, sizeof(uint16_t));
+        memcpy(&read_byte_count, &regBuff, sizeof(uint16_t));
+        read_byte_count =
+            read_byte_count * 2; // реально количество запрашиваемых байт
 
-        if (reg > fourBOutputList.size())
-          reg = fourBOutputList.size();
+        int startIndex = m_fourByteOutputAddrList.indexOf(regAddress) / 2;
 
-        QList<uint8_t> holdings = QList<uint8_t>();
+        if (read_byte_count == 0 ||
+            m_fourByteOutputAddrList.indexOf(regAddress) + read_byte_count >
+                fourBOutputList.size() * 4) {
+          if (read_byte_count == 0) {
+            ui->textEdit->append(QString(
+                "Request error: ILLEGAL DATA VALUE ERROR - the requested "
+                "elements for reading count need to be more than 0!"));
+          }
+          if (m_fourByteOutputAddrList.indexOf(regAddress) + read_byte_count >
+              fourBOutputList.size() * 4) {
+            ui->textEdit->append(QString(
+                "Request error: ILLEGAL DATA VALUE ERROR - the requested "
+                "there is only 4 addresses for reading!"));
+          }
+          answer.append(unitId);
+          answer.append(func | 0x80);
+          answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+          return answer;
+        }
 
-        int startIndex = (m_fourByteOutputAddrList.indexOf(regAddress) / 2);
-        for (int i = 0; i < reg; i++) {
+        const uint r_holding_buff_size = fourBOutputList.size() * 4;
+        char holdingBuff[r_holding_buff_size];
+        // Создаем буффер байтов в холдингах
+        for (int i = 0; i < fourBOutputList.size(); ++i) {
           QLineEdit *le =
               findChild<QLineEdit *>(QString("leQOut%1").arg(startIndex + i));
           if (le) {
             bool ok;
-              uint32_t holding = le->text().split(" ").join("").toUInt(&ok, 16);
-            char holdingBuff[sizeof(uint32_t)];
-            memcpy(&holdingBuff, &holding, sizeof(uint32_t));
-
-            holdings.append(holdingBuff[0]);
-            holdings.append(holdingBuff[1]);
-            holdings.append(holdingBuff[2]);
-            holdings.append(holdingBuff[3]);
+            uint32_t holding = le->text().split(" ").join("").toUInt(&ok, 16);
+            memcpy(&holdingBuff[i * fourBOutputList.size() - 1], &holding,
+                   sizeof(holding));
           } else {
             qDebug() << "Cant find le!";
           }
         }
 
-        answer.append(uint8_t(holdings.size()));
-        for (int i = 0; i < holdings.size(); i++) {
-          answer.append(holdings.at(holdings.size() - i - 1));
+        QList<uint8_t> holdings;
+        int _start = startIndex * 2;
+        for (int i = 0; i < read_byte_count; ++i) {
+          holdings.append(holdingBuff[_start + i]);
         }
+
+        answer.append(uint8_t(holdings.size()));
+        answer.append(holdings);
 
       } else {
         //        qDebug() << "MB_TCP_R_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -429,12 +435,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_R_INPUT -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -479,12 +485,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -529,12 +535,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_SINGLE_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -559,8 +565,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         changeSizeBuff[1] = request.at(10);
         memcpy(&itemsToChange, &changeSizeBuff, sizeof(uint16_t));
 
-        uint8_t commandSize = request.at(12);
-
+        const uint8_t commandSize = request.at(12);
         int data = 0;
         char dataBuff[commandSize];
         for (int i = 0; i < commandSize; i++) {
@@ -599,12 +604,12 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_COIL -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
@@ -618,6 +623,7 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
       memcpy(&regAddress, &buff, sizeof(uint16_t));
 
       if (m_fourByteOutputAddrList.contains(regAddress)) {
+
         answer.append(unitId);
         answer.append(func);
 
@@ -628,92 +634,84 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
         changeSizeBuff[1] = request.at(10);
         memcpy(&itemsToChange, &changeSizeBuff, sizeof(uint16_t));
 
+        if (m_fourByteOutputAddrList.indexOf(regAddress) + itemsToChange >
+            m_fourByteOutputAddrList.size()) {
+          ui->textEdit->append(
+              QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+                      "Writing out of bound!"));
+
+          answer.append(unitId);
+          answer.append(func | 0x80);
+          answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+          return answer;
+        }
+
         uint8_t commandSize = request.at(12);
-
-        if(commandSize > (request.size() - 13))
-        {
-            ui->textEdit->append(
-                QString("Request error: NAK - too short command but expected %1 bytes")
-                    .arg(QString::number(commandSize)));
-            answer.append(unitId);
-            answer.append(func | 0x80);
-            answer.append(MB_NACK_ERR);
-            return answer;
+        if (commandSize > (request.size() - 13)) {
+          ui->textEdit->append(QString("Request error: NAK - too short command "
+                                       "but expected %1 bytes")
+                                   .arg(QString::number(commandSize)));
+          answer.append(unitId);
+          answer.append(func | 0x80);
+          answer.append(MB_NACK_ERR);
+          return answer;
         }
 
-        QList<char> dataBuff;
+        char data_buff[itemsToChange * 2];
         for (int i = 0; i < commandSize; i++) {
-          dataBuff.append(request.at(13 + (commandSize - 1 - i)));
+          data_buff[i] = request.at(13 + /*(commandSize - 1 - i)*/ i);
         }
 
-        if (itemsToChange > m_fourByteOutputAddrList.size()) {
-          itemsToChange = m_fourByteOutputAddrList.size();
-          ui->textEdit->append(QString("It's only %1 items to change!")
-                                   .arg(m_fourByteOutputAddrList.size()));
-        }
+        const uint w_holding_buff_size = fourBOutputList.size() * 4;
+        char recieved_holding_data[w_holding_buff_size];
+        memcpy(&recieved_holding_data
+                   [m_fourByteOutputAddrList.indexOf(regAddress) * 2],
+               &data_buff, itemsToChange * 2);
 
-        int startIndex = m_fourByteOutputAddrList.indexOf(regAddress) / 2;
-        for (int i = 0; i < itemsToChange; i++) {
-          QLineEdit *le = findChild<QLineEdit *>(
-              "leQOut" + QString::number(startIndex + i));
+        for (int i = 0; i < fourBOutputList.size(); ++i) {
+          QLineEdit *le = findChild<QLineEdit *>(QString("leQOut%1").arg(i));
           if (le) {
             bool ok;
-            uint32_t oldVal = le->text().toUInt(&ok, 16);
-            uint32_t newVal = 0;
-            if (dataBuff.size() >= (4 + (4 * i))) {
-                char holdBuff[4];
-                holdBuff[0] = dataBuff.at(0 + (4 * i));
-                holdBuff[1] = dataBuff.at(1 + (4 * i));
-                holdBuff[2] = dataBuff.at(2 + (4 * i));
-                holdBuff[3] = dataBuff.at(3 + (4 * i));
+            uint32_t old_value = le->text().split(" ").join("").toUInt(&ok, 16);
 
-                memcpy(&newVal, &holdBuff, sizeof(uint32_t));
-            } else {
-                int remainBytes = (4 + (4 * i)) - dataBuff.size();
-                if(remainBytes == 0)
-                {
-                    continue;
-                }
-                char holdBuff[remainBytes];
-                for(int k = 0; k < remainBytes; k++)
-                {
-                    holdBuff[k] = dataBuff.at(k + 4*i);
-                }
-                memcpy(&newVal, &holdBuff, sizeof(remainBytes));
+            uint32_t new_value = 0;
+            memcpy(&new_value,
+                   &recieved_holding_data[i * (w_holding_buff_size /
+                                               fourBOutputList.size())],
+                   4);
+
+            if (old_value != new_value) {
+              changedItemsNum++;
+              le->setText(addNullsToHex(
+                  QString::number(new_value, 16).toUpper(), sizeof(new_value)));
             }
 
-            le->setText(QString::number(newVal, 16).toUpper());
-
-            if (oldVal != le->text().toUInt(&ok, 16))
-              changedItemsNum++;
           } else {
-            qDebug() << "Cant find line edit!";
+            qDebug() << "Cant find le!";
           }
         }
 
         answer.append(buff[1]);
         answer.append(buff[0]);
 
-        char changedBuff[2];
-        memcpy(&changedBuff, &changedItemsNum, sizeof(uint16_t));
-        answer.append(changedBuff[1]);
-        answer.append(changedBuff[0]);
+        answer.append(changeSizeBuff[1]);
+        answer.append(changeSizeBuff[0]);
       } else {
         //        qDebug() << "MB_TCP_W_MULTIPLE_HOLDING -> MB_NACK_ERR";
         ui->textEdit->append(
-            QString("Request error: ILLEGAL DATA VALUE ERROR - the requested "
+            QString("Request error: ILLEGAL DATA ADDRESS ERROR - the requested "
                     "address (%1) does not exist!")
                 .arg(QString::number(regAddress, 16).toUpper()));
         answer.append(unitId);
         answer.append(func | 0x80);
-        answer.append(MB_ILLEGAL_DATA_VALUE_ERR);
+        answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
         return answer;
       }
       break;
     }
     default: {
       //      qDebug() << "MB_ILLEGAL_DATA_VALUE_ERR";
-      ui->textEdit->append("Request error: ILLEGAL DATA VALUE!");
+      ui->textEdit->append("Request error: ILLEGAL FUNCTION ERROR!");
       answer.append(unitId);
       answer.append(func | 0x80);
       answer.append(MB_ILLEGAL_FUNCTION_ERR);
@@ -722,10 +720,8 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
     }
   } else {
     //    qDebug() << "MB_ILLEGAL_DATA_ADDRESS_ERR";
-    ui->textEdit->append("Request error: ILLEGAL DATA ADDRES!");
-    answer.append(unitId);
-    answer.append(func | 0x80);
-    answer.append(MB_ILLEGAL_DATA_ADDRESS_ERR);
+    ui->textEdit->append("Request error: ILLEGAL DEVICE ADDRES!");
+    m_isWrongSlaveAddress = true;
     return answer;
   }
 
@@ -737,7 +733,6 @@ QList<uint8_t> ModbusServer::prepareAnswer(QByteArray request) {
 ///
 void ModbusServer::sendData(QList<uint8_t> message) {
   // Increment trans ID
-  m_transID++;
 
   // Take first client socket from List
   QTcpSocket *clientConnection = m_incommingSocketsList.first();
@@ -750,22 +745,11 @@ void ModbusServer::sendData(QList<uint8_t> message) {
 
   out << uint16_t(m_transID) << uint16_t(m_protocolID) << qint16(0);
 
-  foreach (uint8_t ch, message) {
-    out << ch;
-  }
+  foreach (uint8_t ch, message) { out << ch; }
 
   // set commandSize
   out.device()->seek(4);
   out << quint16(block.size() + 2 - sizeof(qint16) * 3);
-
-  // calc CRC
-  qint16 CRC = qChecksum(block, block.size());
-  uint8_t buff[sizeof(qint16)];
-  memcpy(&buff, &CRC, sizeof(qint16));
-
-  for (uint64_t i = 0; i < sizeof(qint16); i++) {
-    block.append(buff[i]);
-  }
 
   // write data in socket
   clientConnection->write(block);

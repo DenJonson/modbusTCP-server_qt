@@ -166,7 +166,11 @@
         <widget class="QGroupBox" name="groupBox">
          <layout class="QGridLayout" name="gridLayout_7">
           <item row="1" column="1">
-           <widget class="QSpinBox" name="sbDOut0"/>
+           <widget class="QSpinBox" name="sbDOut0">
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::NoButtons</enum>
+            </property>
+           </widget>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_7">
@@ -183,7 +187,11 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QSpinBox" name="sbDOut1"/>
+           <widget class="QSpinBox" name="sbDOut1">
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::NoButtons</enum>
+            </property>
+           </widget>
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="label_21">
@@ -193,10 +201,18 @@
            </widget>
           </item>
           <item row="4" column="1">
-           <widget class="QSpinBox" name="sbDOut3"/>
+           <widget class="QSpinBox" name="sbDOut3">
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::NoButtons</enum>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QSpinBox" name="sbDOut2"/>
+           <widget class="QSpinBox" name="sbDOut2">
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::NoButtons</enum>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_6">

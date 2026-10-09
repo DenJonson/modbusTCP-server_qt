@@ -15,7 +15,9 @@ QT_END_NAMESPACE
 /// Коды функций
 #define MB_TCP_R_COIL 0x01 // Функция чтения дискретных выходов
 #define MB_TCP_R_DINPUT 0x02 // Функция чтения дискретных входов
-#define MB_TCP_R_HOLDING 0x03 // Функция чтения 32-битных выходов
+#define MB_TCP_R_HOLDING                                                       \
+  0x03 // Функция чтения 16-битных выходов (в текущей реализации применяется для
+       // 32-б выходов
 #define MB_TCP_R_INPUT 0x04 // Функция чтения 16-битных входов
 #define MB_TCP_W_SINGLE_COIL 0x05 // Функция записи одного дискретного выхода
 #define MB_TCP_W_SINGLE_HOLDING 0x06 // Функция записи одного 32-битного выхода
@@ -72,6 +74,7 @@ private:
   QDataStream m_requestStream;
 
   bool m_isHandwriting;
+  bool m_isWrongSlaveAddress = false;
 
   uint16_t m_transID;
   uint16_t const m_protocolID;
